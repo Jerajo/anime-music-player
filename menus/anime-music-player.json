@@ -1,0 +1,58 @@
+{
+  "context-menu": {
+    "atom-text-editor": [
+      {
+        "label": "Toggle Anime Music Player",
+        "command": "anime-music-player:toggle"
+      }
+    ]
+  },
+  "menu": [
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Anime Music Player",
+          "submenu": [
+            {
+              "label": "Toggle ( On / Off )",
+              "command": "anime-music-player:toggle"
+            },
+            {
+              "label": "Play / Pasue (Toggle)",
+              "command": "anime-music-player:play/pause"
+            },
+            {
+              "label": "Stop",
+              "command": "anime-music-player:stop"
+            },
+            {
+              "label": "Repeat",
+              "command": "anime-music-player:repeat"
+            },
+            {
+              "label": "Next",
+              "command": "anime-music-player:next"
+            },
+            {
+              "label": "Previous",
+              "command": "anime-music-player:previous"
+            },
+            {
+              "label": "Volume Up(+)",
+              "command": "anime-music-player:volumeUp"
+            },
+            {
+              "label": "Volume Down(-)",
+              "command": "anime-music-player:volumeDown"
+            },
+            {
+              "label": "Mute (Toggle)",
+              "command": "anime-music-player:mute-toggle"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

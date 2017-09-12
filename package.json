@@ -1,0 +1,22 @@
+{
+	"name": "anime-music-player",
+	"version": "0.0.1",
+	"description": "A plugin for activate power mode that plays background music while you are in combo mode.",
+	"keywords": [
+		"anime",
+		"music",
+		"player"
+	],
+	"license": "MIT",
+	"author": "Jesse R. Jose <jessejose@outlook.es> (https://github.com/Jerajo)",
+	"main": "./lib/anime-music-player",
+	"repository": {
+		"url": "https://github.com/Jerajo/anime-music-player"
+	},
+	"dependencies": {
+		"lodash.debounce": "^4.0.8"
+	},
+	"engines": {
+		"atom": ">=1.17.0 <2.0.0"
+	}
+}

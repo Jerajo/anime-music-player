@@ -1,0 +1,17 @@
+{
+  "atom-workspace": {
+    "alt-a": "anime-music-player:toggle",
+    "shift-alt-p": "anime-music-player:play/pause",
+    "shift-alt-s": "anime-music-player:stop",
+    "shift-alt-r": "anime-music-player:repeat",
+    "shift-alt-m": "anime-music-player:mute-toggle",
+    "alt-right": "anime-music-player:next",
+    "alt-left": "anime-music-player:previous",
+    "alt-up": "anime-music-player:volumeUp",
+    "alt-down": "anime-music-player:volumeDown"
+  },
+  "atom-text-editor:not([mini])": {
+    "alt-right": "anime-music-player:next",
+    "alt-left": "anime-music-player:previous"
+  }
+}
