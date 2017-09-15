@@ -40,23 +40,37 @@ module.exports =
         default: true
         order: 1
 
+      currentSong:
+        title: "Music Box - Current Music"
+        description: "Current song selected to be played"
+        type: "integer"
+        default: 0
+        order: 2
+
       remenberTime:
         title: "Music Box - Remenber Time"
         description: "Remenber time of the last sound played."
         type: "boolean"
         default: false
-        order: 2
+        order: 3
 
-    sequence:
-      title: "Remixer - Tracks Sequence"
-      description: "Indicate the track number sequence that will be played.
-      <br/>(let in blank to use the default or random order)"
-      type: "array"
-      default: []
-      order: 3
+      time:
+        title: "Music Box - Saved Time"
+        description: "Time for last song was played."
+        type: "integer"
+        default: 0
+        order: 4
+
+      sequence:
+        title: "Music Box - Tracks Sequence"
+        description: "Indicate the track number sequence that will be played.
+        <br/>(let in blank to use the default or random order)"
+        type: "array"
+        default: []
+        order: 5
 
       random:
-        title: "Music Player - Play Randomly"
+        title: "Music Box - Play Randomly"
         description: "Make a random play list."
         type: "boolean"
         default: false
