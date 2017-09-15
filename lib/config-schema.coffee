@@ -30,12 +30,6 @@ module.exports =
         minimum: 1
         maximum: 100
 
-      random:
-        title: "Music Player - Play Randomly"
-        description: "Make a random play list."
-        type: "boolean"
-        default: false
-
   musicBox:
     type: "object"
     properties:
@@ -44,10 +38,26 @@ module.exports =
         description: "Remenber whith song was the last played."
         type: "boolean"
         default: true
+        order: 1
 
       remenberTime:
         title: "Music Box - Remenber Time"
         description: "Remenber time of the last sound played."
+        type: "boolean"
+        default: false
+        order: 2
+
+    sequence:
+      title: "Remixer - Tracks Sequence"
+      description: "Indicate the track number sequence that will be played.
+      <br/>(let in blank to use the default or random order)"
+      type: "array"
+      default: []
+      order: 3
+
+      random:
+        title: "Music Player - Play Randomly"
+        description: "Make a random play list."
         type: "boolean"
         default: false
 
@@ -60,14 +70,6 @@ module.exports =
         type: "boolean"
         default: false
         order: 1
-
-      sequence:
-        title: "Remixer - Tracks Sequence"
-        description: "Indicate the track number sequence that will be played.
-        <br/>(let in blank to use the default or random order)"
-        type: "array"
-        default: []
-        order: 2
 
       start:
         title: "Remixer - Starting Time"

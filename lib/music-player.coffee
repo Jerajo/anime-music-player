@@ -51,12 +51,14 @@ module.exports =
         @remixer()
         return @setMusic()
       if @musicFiles.length > 0
+        error = ""
         for index, trackNumber of sequence
           if trackNumber < 0 or trackNumber > @musicFiles.length-1
+            error += "The track #{trackNumber} is out of range.\n"
             sequence.splice(index, 1)
-            error = true
-        if error?
-          console.error("Out of range. Has to be >= 0 and >= " + @musicFiles.length-1)
+        if error != ""
+          error += "Out of range. Has to be >= 0 and >= #{@musicFiles.length-1}"
+          atom.notifications.addError error
           return @setConfig "remixer.sequence", sequence
         @remixer()
         @setMusic()
@@ -86,7 +88,7 @@ module.exports =
         console.error  "Error!: The folder doesn't exist or doesn't contain audio files!."
         @setConfig("musicPlayer.musicPath","../sounds/musics/")
 
-    if @obs.conf['remenberTime'] and !@music['isRandom'] and (value = @getConfig "musicBox.time") != undefined
+    if @obs.conf['remenberTime'] and (!@music['isRandom'] and @sequence.length is 0) and (value = @getConfig "musicBox.time") != undefined
       @music['file'].currentTime = value
 
   getAudioFiles: ->
@@ -108,8 +110,6 @@ module.exports =
   remixer: ->
     @pause() if @music['isPlaying']
     return @userPlayList() if @sequence.length > 0
-    console.log "Lista Ordenada"
-    console.log @musicFiles
     return @playList = @shuffle(@musicFiles) if @music['isRandom']
     @playList = @musicFiles
 
@@ -118,17 +118,11 @@ module.exports =
     for index, track of @sequence
       @playList[index] = @musicFiles[track]
 
-    console.log "userPlayList"
-    console.log @playList
-
   shuffle: (a) ->
-    console.log "Lista Random"
     i = a.length
     while i
       j = Math.floor(Math.random() * i)
       [t = a[i], a[i] = a[j], a[j] = t, i--]
-
-    console.log a
     return a
 
   setMusic: ->
