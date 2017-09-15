@@ -38,6 +38,29 @@ module.exports =
     if @obs.conf['remenberSong'] and (value = @getConfig "musicBox.currentMusic") != undefined
       @currentMusic = value
 
+    @randomObserver = atom.config.observe 'anime-music-player.musicPlayer.random', (value) =>
+      @music['isRandom'] = value
+      if @musicFiles.length > 0
+        @currentMusic = 0 if @music['isRandom']
+        @remixer()
+        @setMusic()
+
+    @sequenceObserver = atom.config.observe 'anime-music-player.remixer.sequence', (sequence) =>
+      @sequence = sequence
+      if @musicFiles.length > 0 and @sequence.length is 0
+        @remixer()
+        return @setMusic()
+      if @musicFiles.length > 0
+        for index, trackNumber of sequence
+          if trackNumber < 0 or trackNumber > @musicFiles.length-1
+            sequence.splice(index, 1)
+            error = true
+        if error?
+          console.error("Out of range. Has to be >= 0 and >= " + @musicFiles.length-1)
+          return @setConfig "remixer.sequence", sequence
+        @remixer()
+        @setMusic()
+
     @musicVolumeObserver?.dispose()
     @musicVolumeObserver = atom.config.observe 'anime-music-player.musicPlayer.volume', (volume) =>
       @music['volume'] = (volume * 0.01)
@@ -56,31 +79,15 @@ module.exports =
 
       if fs.existsSync(@music['path'])
         @musicFiles = @getAudioFiles()
-        @remixer() if @music['isRandom']?
+        @remixer() if @sequence.length > 0
         @setMusic()
       else
         @musicFiles = null
         console.error  "Error!: The folder doesn't exist or doesn't contain audio files!."
         @setConfig("musicPlayer.musicPath","../sounds/musics/")
 
-    if @obs.conf['remenberTime'] and (value = @getConfig "musicBox.time") != undefined
+    if @obs.conf['remenberTime'] and !@music['isRandom'] and (value = @getConfig "musicBox.time") != undefined
       @music['file'].currentTime = value
-
-    @sequenceObserver = atom.config.observe 'anime-music-player.remixer.sequence', (sequence) =>
-      for index, trackNumber of sequence
-        if trackNumber < 0 or trackNumber > @musicFiles.length-1
-          sequence.splice(index, 1)
-          error = true
-      if error?
-        console.error("Out of range. Has to be >= 0 and >= " + @musicFiles.length-1)
-        return @setConfig "remixer.sequence", sequence
-
-      @sequence = sequence
-      @remixer() if @music['isRandom']?
-
-    @randomObserver = atom.config.observe 'anime-music-player.musicPlayer.path', (value) =>
-      @music['isRandom'] = value
-      @remixer()
 
   getAudioFiles: ->
     allFiles = fs.readdirSync(@music['path'])
@@ -101,27 +108,39 @@ module.exports =
   remixer: ->
     @pause() if @music['isPlaying']
     return @userPlayList() if @sequence.length > 0
-    return @randomPlayList() if @music['isRandom']
-    @defaultPlayList()
+    console.log "Lista Ordenada"
+    console.log @musicFiles
+    return @playList = @shuffle(@musicFiles) if @music['isRandom']
+    @playList = @musicFiles
 
   userPlayList: ->
+    @playList = []
     for index, track of @sequence
       @playList[index] = @musicFiles[track]
+
     console.log "userPlayList"
     console.log @playList
 
-  randomPlayList: ->
-    console.log "randomPlayList"
-    console.log @playList
+  shuffle: (a) ->
+    console.log "Lista Random"
+    i = a.length
+    while i
+      j = Math.floor(Math.random() * i)
+      [t = a[i], a[i] = a[j], a[j] = t, i--]
 
-  defaultPlayList: ->
-    console.log "defaultPlayList"
-    console.log @playList
+    console.log a
+    return a
 
   setMusic: ->
     isPlaying = @music['isPlaying']
+    maxIndex = @playList.length - 1
+    @currentMusic = maxIndex if @currentMusic > maxIndex
+    @currentMusic = 0 if @currentMusic < 0
+
     @music['file'].pause() if @music['file'] != undefined and isPlaying
-    @music['file'] = new Audio(@music['path'] + @musicFiles[@currentMusic])
+    console.log "cansion #" + @currentMusic
+    console.log @music['path'] + @playList[@currentMusic]
+    @music['file'] = new Audio(@music['path'] + @playList[@currentMusic])
     @music['file'].volume = if @music['isMute'] then 0 else @music['volume']
     @music['file'].autoplay = true if isPlaying
     @music['file'].onended = =>
@@ -155,10 +174,7 @@ module.exports =
 
   changeMusic: (nextIndex) ->
     isPlaying = @music['isPlaying']
-    maxIndex = @musicFiles.length - 1
     @currentMusic = @currentMusic + nextIndex
-    @currentMusic = 0 if @currentMusic > maxIndex
-    @currentMusic = maxIndex if @currentMusic < 0
     @setMusic()
 
   volumeUpDown: (volumeChange) ->
