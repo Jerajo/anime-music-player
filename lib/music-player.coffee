@@ -13,7 +13,7 @@ module.exports =
   currentMusic: 0
 
   disable: ->
-    @remenberSong()
+    @setConfig "musicBox.time", @music['file'].currentTime if @obs.conf['remenberTime']
     @obs.destroy()
     @pause() if @music['isPlaying']
     @musicVolumeObserver?.dispose()
@@ -26,10 +26,6 @@ module.exports =
     @sequence = []
     @currentMusic = 0
 
-  remenberSong: ->
-    @setConfig "musicBox.currentMusic", @currentMusic if @obs.conf['remenberSong']
-    @setConfig "musicBox.time", @music['file'].currentTime if @obs.conf['remenberTime']
-
   setup: ->
     @obs.setup()
     @music['isMute'] = false
@@ -38,14 +34,14 @@ module.exports =
     if @obs.conf['remenberSong'] and (value = @getConfig "musicBox.currentMusic") != undefined
       @currentMusic = value
 
-    @randomObserver = atom.config.observe 'anime-music-player.musicPlayer.random', (value) =>
+    @randomObserver = atom.config.observe 'anime-music-player.musicBox.random', (value) =>
       @music['isRandom'] = value
       if @musicFiles.length > 0
         @currentMusic = 0 if @music['isRandom']
         @remixer()
         @setMusic()
 
-    @sequenceObserver = atom.config.observe 'anime-music-player.remixer.sequence', (sequence) =>
+    @sequenceObserver = atom.config.observe 'anime-music-player.musicBox.sequence', (sequence) =>
       @sequence = sequence
       if @musicFiles.length > 0 and @sequence.length is 0
         @remixer()
@@ -59,7 +55,7 @@ module.exports =
         if error != ""
           error += "Out of range. Has to be >= 0 and >= #{@musicFiles.length-1}"
           atom.notifications.addError error
-          return @setConfig "remixer.sequence", sequence
+          return @setConfig "musicBox.sequence", sequence
         @remixer()
         @setMusic()
 
@@ -88,7 +84,7 @@ module.exports =
         console.error  "Error!: The folder doesn't exist or doesn't contain audio files!."
         @setConfig("musicPlayer.musicPath","../sounds/musics/")
 
-    if @obs.conf['remenberTime'] and (!@music['isRandom'] and @sequence.length is 0) and (value = @getConfig "musicBox.time") != undefined
+    if @obs.conf['remenberTime'] and (value = @getConfig "musicBox.time") != undefined
       @music['file'].currentTime = value
 
   getAudioFiles: ->
@@ -139,6 +135,8 @@ module.exports =
     @music['file'].autoplay = true if isPlaying
     @music['file'].onended = =>
       @next()
+
+    @setConfig "musicBox.currentSong", @currentMusic if @obs.conf['remenberSong']
 
   play: ->
     return null if !@music['file'].paused
