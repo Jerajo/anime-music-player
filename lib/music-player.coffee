@@ -13,7 +13,8 @@ module.exports =
   currentMusic: 0
 
   disable: ->
-    @setConfig "musicBox.time", @music['file'].currentTime if @obs.conf['remenberTime']
+    if !@music['isRandom'] and @obs.conf['remenberTime']
+      @setConfig "musicBox.time", @music['file'].currentTime
     @obs.destroy()
     @pause() if @music['isPlaying']
     @musicVolumeObserver?.dispose()
@@ -38,14 +39,10 @@ module.exports =
       @music['isRandom'] = value
       if @musicFiles.length > 0
         @currentMusic = 0 if @music['isRandom']
-        @remixer()
-        @setMusic()
+        @randomPlayList()
 
     @sequenceObserver = atom.config.observe 'anime-music-player.musicBox.sequence', (sequence) =>
       @sequence = sequence
-      if @musicFiles.length > 0 and @sequence.length is 0
-        @remixer()
-        return @setMusic()
       if @musicFiles.length > 0
         error = ""
         for index, trackNumber of sequence
@@ -56,7 +53,7 @@ module.exports =
           error += "Out of range. Has to be >= 0 and >= #{@musicFiles.length-1}"
           atom.notifications.addError error
           return @setConfig "musicBox.sequence", sequence
-        @remixer()
+        @userPlayList()
         @setMusic()
 
     @musicVolumeObserver?.dispose()
@@ -77,14 +74,19 @@ module.exports =
 
       if fs.existsSync(@music['path'])
         @musicFiles = @getAudioFiles()
-        @remixer() if @sequence.length > 0
+        console.log @musicFiles
+        if @music['isRandom']
+          @randomPlayList()
+        else if @sequence.length > 0
+          @userPlayList()
+        else @playList = @musicFiles
         @setMusic()
       else
         @musicFiles = null
         console.error  "Error!: The folder doesn't exist or doesn't contain audio files!."
         @setConfig("musicPlayer.musicPath","../sounds/musics/")
 
-    if @obs.conf['remenberTime'] and (value = @getConfig "musicBox.time") != undefined
+    if !@music['isRandom'] and @obs.conf['remenberTime'] and (value = @getConfig "musicBox.time") != undefined
       @music['file'].currentTime = value
 
   getAudioFiles: ->
@@ -103,23 +105,26 @@ module.exports =
     return true if(fileExtencion is "webm") or (fileExtencion is "WEBM")
     return false
 
-  remixer: ->
-    @pause() if @music['isPlaying']
-    return @userPlayList() if @sequence.length > 0
-    return @playList = @shuffle(@musicFiles) if @music['isRandom']
-    @playList = @musicFiles
-
   userPlayList: ->
     @playList = []
     for index, track of @sequence
       @playList[index] = @musicFiles[track]
 
-  shuffle: (a) ->
-    i = a.length
+  randomPlayList: ->
+    list = []
+    for i, song of @musicFiles
+      list[i] = i if i != undefined
+      if i is undefined
+        console.log "undefined found"
+        @musicFiles.splice(1, 1)
+    console.log list
+    i = @musicFiles.length
     while i
       j = Math.floor(Math.random() * i)
-      [t = a[i], a[i] = a[j], a[j] = t, i--]
-    return a
+      [c = list[i], list[i] = list[j], list[j] = c]
+      [t = @musicFiles[i], @musicFiles[i] = @musicFiles[j], @musicFiles[j] = t, i--]
+    console.log list
+    @setConfig "musicBox.sequence", list
 
   setMusic: ->
     isPlaying = @music['isPlaying']
@@ -129,7 +134,7 @@ module.exports =
 
     @music['file'].pause() if @music['file'] != undefined and isPlaying
     console.log "cansion #" + @currentMusic
-    console.log @music['path'] + @playList[@currentMusic]
+    console.log @playList[@currentMusic]
     @music['file'] = new Audio(@music['path'] + @playList[@currentMusic])
     @music['file'].volume = if @music['isMute'] then 0 else @music['volume']
     @music['file'].autoplay = true if isPlaying

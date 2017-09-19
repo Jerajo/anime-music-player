@@ -35,7 +35,7 @@ module.exports =
     properties:
       remenberSong:
         title: "Music Box - Remenber Song"
-        description: "Remenber whith song was the last played."
+        description: "Remenber which song was the last played."
         type: "boolean"
         default: true
         order: 1
@@ -62,9 +62,9 @@ module.exports =
         order: 4
 
       sequence:
-        title: "Music Box - Tracks Sequence"
-        description: "Indicate the track number sequence that will be played.
-        <br/>(let in blank to use the default or random order)"
+        title: "Music Box - Play List"
+        description: "Indicate the order, that songs will be played.
+        (let in blank to use the default or random order)"
         type: "array"
         default: []
         order: 5
@@ -88,13 +88,13 @@ module.exports =
       start:
         title: "Remixer - Starting Time"
         description: "Indicate the starting track time (in seconds).
-        <br/>(let in blank to start at second 0)"
+        (let in blank to start at second 0)"
         type: "array"
         default: []
 
       end:
         title: "Remixer - Ending Time"
         description: "Indicate the time when next song will be played (in seconds).
-        <br/>(let in blank or in 0 to play entire song)"
+        (let in blank or in 0 to play entire song)"
         type: "array"
         default: []
