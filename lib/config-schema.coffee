@@ -61,7 +61,7 @@ module.exports =
         default: 0
         order: 4
 
-      sequence:
+      playList:
         title: "Music Box - Play List"
         description: "Indicate the order, that songs will be played.
         (let in blank to use the default or random order)"
