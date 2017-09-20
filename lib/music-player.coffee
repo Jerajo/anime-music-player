@@ -32,8 +32,11 @@ module.exports =
     @music['isMute'] = false
     @music['isPlaying'] = false
 
-    if @obs.conf['remenberSong'] and (value = @getConfig "musicBox.currentMusic") != undefined
-      @currentMusic = value
+    @currentMusicObserver = atom.config.observe 'anime-music-player.musicBox.currentSong', (value) =>
+      if @obs.conf['remenberSong'] or @music['file'] != undefined
+        @currentMusic = value
+        return if @music['file'] is undefined
+        @setMusic()
 
     @randomObserver = atom.config.observe 'anime-music-player.musicBox.random', (value) =>
       @music['isRandom'] = value
@@ -41,18 +44,9 @@ module.exports =
         @currentMusic = 0 if @music['isRandom']
         @randomPlayList()
 
-    @sequenceObserver = atom.config.observe 'anime-music-player.musicBox.sequence', (sequence) =>
-      @sequence = sequence
+    @sequenceObserver = atom.config.observe 'anime-music-player.musicBox.playList', (playList) =>
+      @sequence = playList
       if @musicFiles.length > 0
-        error = ""
-        for index, trackNumber of sequence
-          if trackNumber < 0 or trackNumber > @musicFiles.length-1
-            error += "The track #{trackNumber} is out of range.\n"
-            sequence.splice(index, 1)
-        if error != ""
-          error += "Out of range. Has to be >= 0 and >= #{@musicFiles.length-1}"
-          atom.notifications.addError error
-          return @setConfig "musicBox.sequence", sequence
         @userPlayList()
         @setMusic()
 
@@ -80,14 +74,15 @@ module.exports =
         else if @sequence.length > 0
           @userPlayList()
         else @playList = @musicFiles
+        console.log @playList
         @setMusic()
       else
         @musicFiles = null
         console.error  "Error!: The folder doesn't exist or doesn't contain audio files!."
         @setConfig("musicPlayer.musicPath","../sounds/musics/")
 
-    if !@music['isRandom'] and @obs.conf['remenberTime'] and (value = @getConfig "musicBox.time") != undefined
-      @music['file'].currentTime = value
+    if !@music['isRandom'] and @obs.conf['remenberTime']
+      @music['file'].currentTime = @getConfig "musicBox.time"
 
   getAudioFiles: ->
     allFiles = fs.readdirSync(@music['path'])
@@ -107,41 +102,40 @@ module.exports =
 
   userPlayList: ->
     @playList = []
+    error = ""
+    for index, trackNumber of @sequence
+      if trackNumber < 0 or trackNumber > @musicFiles.length-1
+        error += "The track #{trackNumber} is out of range.\n"
+        @sequence.splice(index, 1)
+    if error != ""
+      error += "Out of range. Has to be >= 0 and >= #{@musicFiles.length-1}"
+      atom.notifications.addError error
+      @setConfig "musicBox.playList", @sequence
     for index, track of @sequence
       @playList[index] = @musicFiles[track]
 
   randomPlayList: ->
-    list = []
-    for i, song of @musicFiles
-      list[i] = i if i != undefined
-      if i is undefined
-        console.log "undefined found"
-        @musicFiles.splice(1, 1)
-    console.log list
     i = @musicFiles.length
     while i
       j = Math.floor(Math.random() * i)
       [c = list[i], list[i] = list[j], list[j] = c]
       [t = @musicFiles[i], @musicFiles[i] = @musicFiles[j], @musicFiles[j] = t, i--]
     console.log list
-    @setConfig "musicBox.sequence", list
+    @setConfig "musicBox.playList", list
 
   setMusic: ->
-    isPlaying = @music['isPlaying']
-    maxIndex = @playList.length - 1
-    @currentMusic = maxIndex if @currentMusic > maxIndex
-    @currentMusic = 0 if @currentMusic < 0
-
-    @music['file'].pause() if @music['file'] != undefined and isPlaying
+    console.log "Ahy #{@playList.length-1} cansiones en el playList"
     console.log "cansion #" + @currentMusic
     console.log @playList[@currentMusic]
+
+    return @changeMusic(1) if @playList[@currentMusic] is undefined
+    isPlaying = @music['isPlaying']
+    @music['file'].pause() if @music['file'] != undefined and isPlaying
     @music['file'] = new Audio(@music['path'] + @playList[@currentMusic])
     @music['file'].volume = if @music['isMute'] then 0 else @music['volume']
     @music['file'].autoplay = true if isPlaying
     @music['file'].onended = =>
       @next()
-
-    @setConfig "musicBox.currentSong", @currentMusic if @obs.conf['remenberSong']
 
   play: ->
     return null if !@music['file'].paused
@@ -172,7 +166,10 @@ module.exports =
   changeMusic: (nextIndex) ->
     isPlaying = @music['isPlaying']
     @currentMusic = @currentMusic + nextIndex
-    @setMusic()
+    maxIndex = @playList.length - 1
+    @currentMusic = 0 if @currentMusic > maxIndex
+    @currentMusic = maxIndex if @currentMusic < 0
+    @setConfig "musicBox.currentSong", @currentMusic if @obs.conf['remenberSong']
 
   volumeUpDown: (volumeChange) ->
     volume = (@music['volume'] * 100)
