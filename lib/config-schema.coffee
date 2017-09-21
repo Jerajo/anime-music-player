@@ -9,7 +9,7 @@ module.exports =
     type: "object"
     properties:
       path:
-        title: "Music Player - Path to Audio"
+        title: "Music Player - Path to Songs"
         description: "Path to music tracks."
         type: "string"
         default: '../sounds/'
@@ -43,8 +43,8 @@ module.exports =
       currentSong:
         title: "Music Box - Current Music"
         description: "Current song selected to be played"
-        type: "integer"
-        default: 0
+        type: "string"
+        default: ""
         order: 2
 
       remenberTime:
@@ -98,3 +98,33 @@ module.exports =
         (let in blank or in 0 to play entire song)"
         type: "array"
         default: []
+
+  visualEffects:
+    type: "object"
+    properties:
+      enable:
+        title: "Visual Effects - Enable"
+        description: "Enable/disable the visual effects."
+        type: "boolean"
+        default: true
+        order: 1
+
+      random:
+        title: "Visual Effects - Display Randomly"
+        description: "Displays a random image for each song."
+        type: "boolean"
+        default: false
+        order: 2
+
+      path:
+        title: "Visual Effects - Path to Images"
+        description: "Path to music tracks."
+        type: "string"
+        default: '../images/'
+        order: 3
+
+      currentImage:
+        title: "Visual Effects - Current Image"
+        description: "Path to music tracks."
+        type: "string"
+        default: '1.jpg'
