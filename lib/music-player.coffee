@@ -10,7 +10,7 @@ module.exports =
   musicFiles: []
   playList: []
   sequence: []
-  currentMusic: 0
+  songNumber: 0
 
   disable: ->
     if !@music['isRandom'] and @obs.conf['remenberTime']
@@ -25,23 +25,23 @@ module.exports =
     @musicFiles = []
     @playList = []
     @sequence = []
-    @currentMusic = 0
+    @songNumber = 0
 
   setup: ->
     @obs.setup()
     @music['isMute'] = false
     @music['isPlaying'] = false
 
-    @currentMusicObserver = atom.config.observe 'anime-music-player.musicBox.currentSong', (value) =>
-      if @obs.conf['remenberSong'] or @music['file'] != undefined
-        @currentMusic = value
-        return if @music['file'] is undefined
-        @setMusic()
+    @currentSongObserver = atom.config.observe 'anime-music-player.musicBox.currentSong', (currentSong) =>
+      @songName = currentSong
+      return if @music['file'] is undefined
+      @songNumber = @getSongNumber()
+      @setMusic()
 
     @randomObserver = atom.config.observe 'anime-music-player.musicBox.random', (value) =>
       @music['isRandom'] = value
       if @musicFiles.length > 0
-        @currentMusic = 0 if @music['isRandom']
+        @songNumber = 0 if @music['isRandom']
         @randomPlayList()
 
     @sequenceObserver = atom.config.observe 'anime-music-player.musicBox.playList', (playList) =>
@@ -74,6 +74,7 @@ module.exports =
         else if @sequence.length > 0
           @userPlayList()
         else @playList = @musicFiles
+        @songNumber = @getSongNumber() if @obs.conf['remenberSong']
         console.log @playList
         @setMusic()
       else
@@ -100,6 +101,11 @@ module.exports =
     return true if(fileExtencion is "webm") or (fileExtencion is "WEBM")
     return false
 
+  getSongNumber: ->
+    return 0 if @songName is ""
+    for number, song of @musicFiles
+      return number if song is @songName
+
   userPlayList: ->
     @playList = []
     error = ""
@@ -125,13 +131,13 @@ module.exports =
 
   setMusic: ->
     console.log "Ahy #{@playList.length-1} cansiones en el playList"
-    console.log "cansion #" + @currentMusic
-    console.log @playList[@currentMusic]
+    console.log "cansion #" + @songNumber
+    console.log @musicFiles[@songNumber]
 
-    return @changeMusic(1) if @playList[@currentMusic] is undefined
+    return @changeMusic(1) if @musicFiles[@songNumber] is undefined
     isPlaying = @music['isPlaying']
     @music['file'].pause() if @music['file'] != undefined and isPlaying
-    @music['file'] = new Audio(@music['path'] + @playList[@currentMusic])
+    @music['file'] = new Audio(@music['path'] + @musicFiles[@songNumber])
     @music['file'].volume = if @music['isMute'] then 0 else @music['volume']
     @music['file'].autoplay = true if isPlaying
     @music['file'].onended = =>
@@ -165,11 +171,11 @@ module.exports =
 
   changeMusic: (nextIndex) ->
     isPlaying = @music['isPlaying']
-    @currentMusic = @currentMusic + nextIndex
+    @songNumber = @songNumber + nextIndex
     maxIndex = @playList.length - 1
-    @currentMusic = 0 if @currentMusic > maxIndex
-    @currentMusic = maxIndex if @currentMusic < 0
-    @setConfig "musicBox.currentSong", @currentMusic if @obs.conf['remenberSong']
+    @songNumber = 0 if @songNumber > maxIndex
+    @songNumber = maxIndex if @songNumber < 0
+    @setConfig "musicBox.currentSong", @playList[@songNumber]
 
   volumeUpDown: (volumeChange) ->
     volume = (@music['volume'] * 100)
