@@ -34,9 +34,6 @@ module.exports =
 
     @currentSongObserver = atom.config.observe 'anime-music-player.musicBox.currentSong', (currentSong) =>
       @songName = currentSong
-      return if @music['file'] is undefined
-      @songNumber = @getSongNumber()
-      @setMusic()
 
     @randomObserver = atom.config.observe 'anime-music-player.musicBox.random', (value) =>
       @music['isRandom'] = value
@@ -73,8 +70,10 @@ module.exports =
           @randomPlayList()
         else if @sequence.length > 0
           @userPlayList()
-        else @playList = @musicFiles
-        @songNumber = @getSongNumber() if @obs.conf['remenberSong']
+        else
+          @playList = @musicFiles
+          console.error "using defalutPlayList"
+          @setSongNumber() if @obs.conf['remenberSong']
         console.log @playList
         @setMusic()
       else
@@ -101,12 +100,17 @@ module.exports =
     return true if(fileExtencion is "webm") or (fileExtencion is "WEBM")
     return false
 
-  getSongNumber: ->
-    return 0 if @songName is ""
+  setSongNumber: ->
+    return @songNumber = 0 if @songName is ""
     for number, song of @musicFiles
-      return number if song is @songName
+      console.log number + " | " + song
+      return @songNumber = parseInt(number) if song is @songName
+    atom.notifications.addError "Song didn't found"
+    @setConfig "musicBox.currentSong", ""
+    @songNumber = 0
 
   userPlayList: ->
+    console.error "using userPlayList"
     @playList = []
     error = ""
     for index, trackNumber of @sequence
@@ -121,6 +125,7 @@ module.exports =
       @playList[index] = @musicFiles[track]
 
   randomPlayList: ->
+    console.error "using randomPlayList"
     i = @musicFiles.length
     while i
       j = Math.floor(Math.random() * i)
@@ -170,12 +175,14 @@ module.exports =
     @changeMusic(1)
 
   changeMusic: (nextIndex) ->
-    isPlaying = @music['isPlaying']
+    previus = @songNumber
     @songNumber = @songNumber + nextIndex
     maxIndex = @playList.length - 1
     @songNumber = 0 if @songNumber > maxIndex
     @songNumber = maxIndex if @songNumber < 0
+    console.log @songNumber + " | " + nextIndex + " | " + previus + " | " + maxIndex
     @setConfig "musicBox.currentSong", @playList[@songNumber]
+    @setMusic()
 
   volumeUpDown: (volumeChange) ->
     volume = (@music['volume'] * 100)
